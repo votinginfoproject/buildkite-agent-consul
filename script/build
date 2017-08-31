@@ -2,7 +2,9 @@
 
 set -e
 
-SERVICE=buildkite
+if [[ -z $SERVICE ]]; then
+  SERVICE=${PWD##*/}
+fi
 
 if [[ -z $DOCKER_REPO && -n $1 ]]; then
   DOCKER_REPO=$1
@@ -39,7 +41,10 @@ fi
 
 echo '--- updating fleet service template'
 cp ${SERVICE}@.service.template ${SERVICE}@.service
+
+perl -p -i -e "s|^Environment=DOCKER_REPO=.*$|Environment=DOCKER_REPO=${DOCKER_REPO}|" ${SERVICE}@.service
 perl -p -i -e "s/^Environment=VERSION=.*$/Environment=VERSION=${IMAGE_TAG}/" ${SERVICE}@.service
+perl -p -i -e "s/^Environment=CONTAINER=.*$/Environment=CONTAINER=${SERVICE}/" ${SERVICE}@.service
 
 if hash buildkite-agent 2>/dev/null ; then
   echo '--- saving service file'

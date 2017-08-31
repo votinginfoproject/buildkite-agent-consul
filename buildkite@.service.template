@@ -11,9 +11,9 @@ TimeoutStartSec=10m
 TimeoutStopSec=10m
 Restart=on-failure
 
-Environment=DOCKER_REPO=quay.io/votinginfoproject/buildkite-agent-coreos
-Environment=VERSION=master-1089fe7
-Environment=CONTAINER=buildkite-agent
+Environment=DOCKER_REPO=
+Environment=VERSION=
+Environment=CONTAINER=
 Environment=HOME=/root
 
 ExecStartPre=-/usr/bin/docker kill ${CONTAINER}
