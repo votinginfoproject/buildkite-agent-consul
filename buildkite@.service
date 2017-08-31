@@ -1,0 +1,41 @@
+[Unit]
+Description=BuildKite Agent
+After=docker.service
+Requires=docker.service
+After=consul@%i.service
+Wants=consul@%i.service
+
+[Service]
+EnvironmentFile=/etc/environment
+TimeoutStartSec=10m
+TimeoutStopSec=10m
+Restart=on-failure
+
+Environment=DOCKER_REPO=quay.io/votinginfoproject/buildkite-agent-coreos
+Environment=VERSION=2.3.1
+Environment=CONTAINER=buildkite-agent
+Environment=HOME=/root
+
+ExecStartPre=-/usr/bin/docker kill ${CONTAINER}
+ExecStartPre=-/usr/bin/docker rm ${CONTAINER}
+ExecStartPre=/bin/bash -c 'sleep 2 && curl -s http://${COREOS_PRIVATE_IPV4}:8500/v1/kv/buildkite/vip/dockercfg?raw -o /root/.dockercfg'
+ExecStartPre=/usr/bin/docker pull ${DOCKER_REPO}:${VERSION}
+
+ExecStartPre=/bin/bash -c 'echo $(curl -s http://${COREOS_PRIVATE_IPV4}:8500/v1/kv/buildkite/pem-file?raw) >> /tmp/coreos.pem'
+
+ExecStart=/bin/bash -c 'docker run --name ${CONTAINER} \
+  --env BUILDKITE_AGENT_TOKEN=$(curl -s http://${COREOS_PRIVATE_IPV4}:8500/v1/kv/buildkite/agent-token?raw) \
+  --env BUILDKITE_AGENT_META_DATA="coreos=true,environment=$(curl -s http://${COREOS_PRIVATE_IPV4}:8500/v1/kv/buildkite/environment?raw)" \
+  --env FLEETCTL_ENDPOINT=http://${COREOS_PRIVATE_IPV4}:4001 \
+  --env DOCKERCFG=\"$(curl -s http://${COREOS_PRIVATE_IPV4}:8500/v1/kv/buildkite/vip/dockercfg?raw)\" \
+  --env DOCKER_API_VERSION=\"$(docker version | grep "Server API version:" | awk \'{print $4}\')\" \
+  --volume /var/run/docker.sock:/var/run/docker.sock \
+  --volume /opt/bin/docker.static:/usr/bin/docker \
+  --volume /tmp/coreos.pem:/keys/coreos.pem \
+  ${DOCKER_REPO}:${VERSION}'
+
+# USR2 will tell the agent to wrap up any currently-running builds and then shutdown
+ExecStop=/usr/bin/docker kill -s USR2 ${CONTAINER}
+
+[X-Fleet]
+MachineOf=consul@%i.service

@@ -1,0 +1,37 @@
+#!/bin/bash
+
+set -e
+
+SERVICE=buildkite
+
+function usage() {
+  echo -e "Usage:\n\ndeploy docker_image\n\nEx: deploy quay.io/votinginfoproject/buildkite-agent:docker"
+}
+
+echo '--- retrieving repo and tag'
+if [[ -z $DOCKER_IMAGE ]]; then
+  if [[ -n $1 ]]; then
+    DOCKER_IMAGE=$1
+  elif hash buildkite-agent 2>/dev/null; then
+    DOCKER_IMAGE=$(buildkite-agent meta-data get docker-image)
+  fi
+fi
+
+if [[ -z $DOCKER_IMAGE ]]; then
+  usage
+  exit 1
+fi
+
+IMAGE_TAG=$(echo $DOCKER_IMAGE | awk -F: '{print $2}')
+
+echo '--- updating fleet service template'
+perl -p -i -e "s/^Environment=VERSION=.*$/Environment=VERSION=${IMAGE_TAG}/" ${SERVICE}@.service
+
+fleetctl destroy ${SERVICE}@.service
+fleetctl submit ${SERVICE}@.service
+
+echo '--- (re-)starting fleet service instance'
+for i in {1..3}; do
+  fleetctl destroy ${SERVICE}@$i
+  fleetctl start ${SERVICE}@$i
+done
