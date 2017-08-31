@@ -22,11 +22,6 @@ if [[ -z $DOCKER_IMAGE ]]; then
   exit 1
 fi
 
-IMAGE_TAG=$(echo $DOCKER_IMAGE | awk -F: '{print $2}')
-
-echo '--- updating fleet service template'
-perl -p -i -e "s/^Environment=VERSION=.*$/Environment=VERSION=${IMAGE_TAG}/" ${SERVICE}@.service
-
 fleetctl destroy ${SERVICE}@.service || true
 fleetctl submit ${SERVICE}@.service
 

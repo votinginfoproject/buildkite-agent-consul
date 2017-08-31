@@ -12,7 +12,7 @@ TimeoutStopSec=10m
 Restart=on-failure
 
 Environment=DOCKER_REPO=quay.io/votinginfoproject/buildkite-agent-coreos
-Environment=VERSION=master-10ac112
+Environment=VERSION=master-1089fe7
 Environment=CONTAINER=buildkite-agent
 Environment=HOME=/root
 
@@ -22,7 +22,7 @@ ExecStartPre=/bin/bash -c 'sleep 2 && curl -s http://${COREOS_PRIVATE_IPV4}:8500
 ExecStartPre=/usr/bin/docker pull ${DOCKER_REPO}:${VERSION}
 
 ExecStartPre=/bin/bash -c 'echo $(curl -s http://${COREOS_PRIVATE_IPV4}:8500/v1/kv/buildkite/pem-file?raw) >> /tmp/coreos.pem'
-ExecStartPrw=/bin/bash -c 'chmod 400 /tmp/coreos.pem'
+ExecStartPre=/bin/bash -c 'chmod 400 /tmp/coreos.pem'
 
 ExecStart=/bin/bash -c 'docker run --name ${CONTAINER} \
   --env BUILDKITE_AGENT_TOKEN=$(curl -s http://${COREOS_PRIVATE_IPV4}:8500/v1/kv/buildkite/agent-token?raw) \

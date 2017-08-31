@@ -42,6 +42,10 @@ else
   echo "If you'd like to push this to the Docker repo, run: docker push ${DOCKER_REPO}:${IMAGE_TAG}"
 fi
 
+echo '--- updating fleet service template'
+cp ${SERVICE}@.service.template ${SERVICE}@.service
+perl -p -i -e "s/^Environment=VERSION=.*$/Environment=VERSION=${IMAGE_TAG}/" ${SERVICE}@.service
+
 echo '--- saving docker image tag'
 if hash buildkite-agent 2>/dev/null ; then
   buildkite-agent meta-data set docker-image "${DOCKER_REPO}:${IMAGE_TAG}"
