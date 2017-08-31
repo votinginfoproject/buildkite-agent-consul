@@ -4,21 +4,13 @@ set -e
 
 SERVICE=buildkite
 
-function usage() {
-  echo -e "Usage:\n\ndeploy docker_image\n\nEx: deploy quay.io/votinginfoproject/buildkite-agent:docker"
-}
-
-echo '--- retrieving repo and tag'
-if [[ -z $DOCKER_IMAGE ]]; then
-  if [[ -n $1 ]]; then
-    DOCKER_IMAGE=$1
-  elif hash buildkite-agent 2>/dev/null; then
-    DOCKER_IMAGE=$(buildkite-agent meta-data get docker-image)
-  fi
+if hash buildkite-agent 2>/dev/null ; then
+  echo '--- retrieving service file'
+  buildkite-agent artifact download ${SERVICE}@.service .
 fi
 
-if [[ -z $DOCKER_IMAGE ]]; then
-  usage
+if [[ ! -e ${SERVICE}@.service ]]; then
+  echo "${SERVICE}@.service file is missing. Run script/build to create it."
   exit 1
 fi
 

@@ -9,12 +9,7 @@ if [[ -z $DOCKER_REPO && -n $1 ]]; then
 fi
 
 if [[ -z $DOCKER_REPO ]]; then
-  DOCKER_REPO=$(grep 'Environment=DOCKER_REPO=' ${SERVICE}@.service | awk -F\= '{print $3}')
-fi
-
-if [[ -z $DOCKER_REPO ]]; then
-  echo 'ERROR: DOCKER_REPO or command line arg required.'
-  exit 1
+  DOCKER_REPO="quay.io/votinginfoproject/${SERVICE}"
 fi
 
 echo '--- building docker image'
@@ -46,7 +41,7 @@ echo '--- updating fleet service template'
 cp ${SERVICE}@.service.template ${SERVICE}@.service
 perl -p -i -e "s/^Environment=VERSION=.*$/Environment=VERSION=${IMAGE_TAG}/" ${SERVICE}@.service
 
-echo '--- saving docker image tag'
 if hash buildkite-agent 2>/dev/null ; then
-  buildkite-agent meta-data set docker-image "${DOCKER_REPO}:${IMAGE_TAG}"
+  echo '--- saving service file'
+  buildkite-agent artifact upload ${SERVICE}@.service
 fi
