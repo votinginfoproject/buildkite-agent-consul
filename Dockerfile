@@ -12,4 +12,6 @@ ADD https://github.com/coreos/fleet/releases/download/v${FLEETCTL_VERSION}/fleet
 RUN tar -C /tmp -xzf /tmp/fleet.tar.gz && mv /tmp/fleet-v${FLEETCTL_VERSION}-linux-amd64/fleetctl /bin/ && \
     rm -rf /tmp/fleet-v${FLEETCTL_VERSION}-linux-amd64 && rm /tmp/fleet.tar.gz
 
+RUN ssh-agent -s
+
 COPY hooks /buildkite/hooks
