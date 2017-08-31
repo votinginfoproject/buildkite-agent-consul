@@ -22,7 +22,7 @@ ExecStartPre=/bin/bash -c 'sleep 2 && curl -s http://${COREOS_PRIVATE_IPV4}:8500
 ExecStartPre=/usr/bin/docker pull ${DOCKER_REPO}:${VERSION}
 
 ExecStartPre=/bin/bash -c 'echo $(curl -s http://${COREOS_PRIVATE_IPV4}:8500/v1/kv/buildkite/pem-file?raw) >> /tmp/coreos.pem'
-ExecStartPre=/bin/bash -c 'chmod 400 /tmp/coreos.pem'
+ExecStartPre=/bin/bash -c 'chmod 600 /tmp/coreos.pem'
 
 ExecStart=/bin/bash -c 'docker run --name ${CONTAINER} \
   --env BUILDKITE_AGENT_TOKEN=$(curl -s http://${COREOS_PRIVATE_IPV4}:8500/v1/kv/buildkite/agent-token?raw) \
@@ -32,7 +32,7 @@ ExecStart=/bin/bash -c 'docker run --name ${CONTAINER} \
   --env DOCKER_API_VERSION=\"$(docker version | grep "Server API version:" | awk \'{print $4}\')\" \
   --volume /var/run/docker.sock:/var/run/docker.sock \
   --volume /opt/bin/docker.static:/usr/bin/docker \
-  --volume /tmp/coreos.pem:/keys/coreos.pem \
+  --volume /tmp/coreos.pem:~/.ssh/id_rsa \
   ${DOCKER_REPO}:${VERSION}'
 
 # USR2 will tell the agent to wrap up any currently-running builds and then shutdown
