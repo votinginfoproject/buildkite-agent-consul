@@ -30,7 +30,6 @@ ExecStart=/bin/bash -c 'docker run --name ${CONTAINER} \
   --env SSH_PRIVATE_RSA_KEY=\"$(curl -s http://${COREOS_PRIVATE_IPV4}:8500/v1/kv/buildkite/pem-file?raw)" \
   --volume /var/run/docker.sock:/var/run/docker.sock \
   --volume /opt/bin/docker.static:/usr/bin/docker \
-  --volume /tmp/coreos.pem:~/.ssh/id_rsa \
   ${DOCKER_REPO}:${VERSION}'
 
 # USR2 will tell the agent to wrap up any currently-running builds and then shutdown
