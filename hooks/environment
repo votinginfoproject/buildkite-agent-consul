@@ -1,9 +1,0 @@
-#!/bin/bash
-
-set -e
-
-echo "--- starting ssh-agent"
-eval "$(ssh-agent -s)"
-
-echo "--- adding default keys"
-ssh-add
