@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -euo pipefail
+
+echo "--- starting ssh-agent"
+eval "$(ssh-agent -s)"
+
+echo "--- adding default identities"
+ssh-add

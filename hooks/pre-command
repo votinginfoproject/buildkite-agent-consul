@@ -1,14 +1,10 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
+
+echo "--- setting up dockercfg"
 
 if [[ -n "${DOCKERCFG}" ]]; then
   echo "${DOCKERCFG}" > /root/.dockercfg
   unset DOCKERCFG
 fi
-
-echo "--- starting ssh-agent"
-eval "$(ssh-agent -s)"
-
-echo "--- adding default keys"
-ssh-add
