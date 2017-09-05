@@ -6,8 +6,13 @@ if [[ -z $SERVICE ]]; then
   SERVICE=${PWD##*/}
 fi
 
-if [[ -z $DOCKER_REPO && -n $1 ]]; then
-  DOCKER_REPO=$1
+if [[ -n $1 ]]; then
+  ENVIRONMENT=$1
+fi
+
+if [[ -z $ENVIRONMENT ]]; then
+  echo "Please provide either staging or production as an argument"
+  exit 1
 fi
 
 if [[ -z $DOCKER_REPO ]]; then
@@ -29,24 +34,24 @@ fi
 
 IMAGE_TAG=${BRANCH}-$(git rev-parse --short ${COMMIT})
 
-echo "Building ${DOCKER_REPO}:${IMAGE_TAG}"
-docker build -t $DOCKER_REPO:$IMAGE_TAG .
+echo "Building ${DOCKER_REPO}:${ENVIRONMENT}-${IMAGE_TAG}"
+docker build -t $DOCKER_REPO:${ENVIRONMENT}-$IMAGE_TAG .
 
 if [[ $CI = "true" && $BUILDKITE_PULL_REQUEST = "false" ]]; then
   echo '--- pushing docker image to registry'
-  docker push $DOCKER_REPO:$IMAGE_TAG
+  docker push $DOCKER_REPO:${ENVIRONMENT}-$IMAGE_TAG
 else
-  echo "If you'd like to push this to the Docker repo, run: docker push ${DOCKER_REPO}:${IMAGE_TAG}"
+  echo "If you'd like to push this to the Docker repo, run: docker push ${DOCKER_REPO}:${ENVIRONMENT}-${IMAGE_TAG}"
 fi
 
 echo '--- updating fleet service template'
-cp ${SERVICE}@.service.template ${SERVICE}@.service
+cp ${SERVICE}-${ENVIRONMENT}@.service.template ${SERVICE}-${ENVIRONMENT}@.service
 
-perl -p -i -e "s|^Environment=DOCKER_REPO=.*$|Environment=DOCKER_REPO=${DOCKER_REPO}|" ${SERVICE}@.service
-perl -p -i -e "s/^Environment=VERSION=.*$/Environment=VERSION=${IMAGE_TAG}/" ${SERVICE}@.service
-perl -p -i -e "s/^Environment=CONTAINER=.*$/Environment=CONTAINER=${SERVICE}/" ${SERVICE}@.service
+perl -p -i -e "s|^Environment=DOCKER_REPO=.*$|Environment=DOCKER_REPO=${DOCKER_REPO}|" ${SERVICE}-${ENVIRONMENT}@.service
+perl -p -i -e "s/^Environment=VERSION=.*$/Environment=VERSION=${ENVIRONMENT}-${IMAGE_TAG}/" ${SERVICE}-${ENVIRONMENT}@.service
+perl -p -i -e "s/^Environment=CONTAINER=.*$/Environment=CONTAINER=${SERVICE}/" ${SERVICE}-${ENVIRONMENT}@.service
 
 if hash buildkite-agent 2>/dev/null ; then
   echo '--- saving service file'
-  buildkite-agent artifact upload ${SERVICE}@.service
+  buildkite-agent artifact upload ${SERVICE}-${ENVIRONMENT}@.service
 fi

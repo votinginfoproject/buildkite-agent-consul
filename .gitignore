@@ -1,1 +1,2 @@
-buildkite-agent-consul@.service
+buildkite-agent-consul-staging@.service
+buildkite-agent-consul-production@.service

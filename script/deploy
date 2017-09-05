@@ -6,21 +6,30 @@ if [[ -z $SERVICE ]]; then
   SERVICE=${PWD##*/}
 fi
 
-if hash buildkite-agent 2>/dev/null ; then
-  echo '--- retrieving service file'
-  buildkite-agent artifact download ${SERVICE}@.service .
+if [[ -n $1 ]]; then
+  ENVIRONMENT=$1
 fi
 
-if [[ ! -e ${SERVICE}@.service ]]; then
-  echo "${SERVICE}@.service file is missing. Run script/build to create it."
+if [[ -z $ENVIRONMENT ]]; then
+  echo "Please provide either staging or production as an argument"
   exit 1
 fi
 
-fleetctl destroy ${SERVICE}@.service || true
-fleetctl submit ${SERVICE}@.service
+if hash buildkite-agent 2>/dev/null ; then
+  echo '--- retrieving service file'
+  buildkite-agent artifact download ${SERVICE}-${ENVIRONMENT}@.service .
+fi
+
+if [[ ! -e ${SERVICE}-${ENVIRONMENT}@.service ]]; then
+  echo "${SERVICE}-${ENVIRONMENT}@.service file is missing. Run script/build to create it."
+  exit 1
+fi
+
+fleetctl destroy ${SERVICE}-${ENVIRONMENT}@.service || true
+fleetctl submit ${SERVICE}-${ENVIRONMENT}@.service
 
 echo '--- (re-)starting fleet service instance'
 for i in {1..3}; do
-  fleetctl destroy ${SERVICE}@$i || true
-  fleetctl start ${SERVICE}@$i
+  fleetctl destroy ${SERVICE}-${ENVIRONMENT}@$i || true
+  fleetctl start ${SERVICE}-${ENVIRONMENT}@$i
 done
