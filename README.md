@@ -10,7 +10,7 @@ configuration primarily via consul.
 A coreos environment with a configured consul kv store, and you have your
 FLEETCTL_TUNNEL or FLEETCTL_ENDPOINT setup to talk to the cluster. Always a good
 idea to run `fleetctl list-units` and verify it's the correct environment. It's
-important to note that we deploy agents all the agents to the staging environment,
+important to note that we deploy all the agents to the staging environment,
 regardless of whether they are then building and deploying for staging or
 production. This is why there are two templates, one for staging and one for
 production.
