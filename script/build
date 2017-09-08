@@ -49,7 +49,7 @@ cp ${SERVICE}-${ENVIRONMENT}@.service.template ${SERVICE}-${ENVIRONMENT}@.servic
 
 perl -p -i -e "s|^Environment=DOCKER_REPO=.*$|Environment=DOCKER_REPO=${DOCKER_REPO}|" ${SERVICE}-${ENVIRONMENT}@.service
 perl -p -i -e "s/^Environment=VERSION=.*$/Environment=VERSION=${ENVIRONMENT}-${IMAGE_TAG}/" ${SERVICE}-${ENVIRONMENT}@.service
-perl -p -i -e "s/^Environment=CONTAINER=.*$/Environment=CONTAINER=${SERVICE}/" ${SERVICE}-${ENVIRONMENT}@.service
+perl -p -i -e "s/^Environment=CONTAINER=.*$/Environment=CONTAINER=${SERVICE}-${ENVIRONMENT}/" ${SERVICE}-${ENVIRONMENT}@.service
 
 if hash buildkite-agent 2>/dev/null ; then
   echo '--- saving service file'
