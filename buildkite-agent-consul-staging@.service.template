@@ -25,10 +25,8 @@ ExecStart=/bin/bash -c 'docker run --name ${CONTAINER} \
   --env BUILDKITE_AGENT_TOKEN=$(curl -s http://${COREOS_PRIVATE_IPV4}:8500/v1/kv/buildkite/agent-token?raw) \
   --env BUILDKITE_AGENT_META_DATA="coreos=true,environment=staging" \
   --env DOCKERCFG=\"$(curl -s http://${COREOS_PRIVATE_IPV4}:8500/v1/kv/buildkite/vip/dockercfg?raw)\" \
-  --env DOCKER_API_VERSION=\"$(docker version | grep "Server API version:" | awk \'{print $4}\')\" \
   --env SSH_PRIVATE_RSA_KEY=\"$(curl -s http://${COREOS_PRIVATE_IPV4}:8500/v1/kv/buildkite/pem-file/staging?raw)" \
   --volume /var/run/docker.sock:/var/run/docker.sock \
-  --volume /opt/bin/docker.static:/usr/bin/docker \
   ${DOCKER_REPO}:${VERSION}'
 
 # USR2 will tell the agent to wrap up any currently-running builds and then shutdown
