@@ -1,0 +1,36 @@
+[Unit]
+Description=BuildKite Agent
+After=docker.service
+Requires=docker.service
+After=consul@%i.service
+Wants=consul@%i.service
+
+[Service]
+EnvironmentFile=/etc/environment
+TimeoutStartSec=10m
+TimeoutStopSec=10m
+Restart=on-failure
+
+Environment=DOCKER_REPO=
+Environment=VERSION=
+Environment=CONTAINER=
+Environment=HOME=/root
+
+ExecStartPre=-/usr/bin/docker kill ${CONTAINER}
+ExecStartPre=-/usr/bin/docker rm ${CONTAINER}
+ExecStartPre=/bin/bash -c 'sleep 2 && curl -s http://${COREOS_PRIVATE_IPV4}:8500/v1/kv/buildkite/vip/dockercfg?raw -o /root/.dockercfg'
+ExecStartPre=/usr/bin/docker pull ${DOCKER_REPO}:${VERSION}
+
+ExecStart=/bin/bash -c 'docker run --name ${CONTAINER} \
+  --env BUILDKITE_AGENT_TOKEN=$(curl -s http://${COREOS_PRIVATE_IPV4}:8500/v1/kv/buildkite/agent-token?raw) \
+  --env BUILDKITE_AGENT_META_DATA="coreos=true,environment=gttp" \
+  --env DOCKERCFG=\"$(curl -s http://${COREOS_PRIVATE_IPV4}:8500/v1/kv/buildkite/vip/dockercfg?raw)\" \
+  --env SSH_PRIVATE_RSA_KEY=\"$(curl -s http://${COREOS_PRIVATE_IPV4}:8500/v1/kv/buildkite/pem-file/gttp?raw)" \
+  --volume /var/run/docker.sock:/var/run/docker.sock \
+  ${DOCKER_REPO}:${VERSION}'
+
+# USR2 will tell the agent to wrap up any currently-running builds and then shutdown
+ExecStop=/usr/bin/docker kill -s USR2 ${CONTAINER}
+
+[X-Fleet]
+MachineOf=consul@%i.service
